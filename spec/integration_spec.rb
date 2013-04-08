@@ -19,13 +19,12 @@ describe "Sundial" do
     context "if you give an invalid number #{number[:string]}" do
 
       it "will return an error" do
-        get URI.encode("/#{number[:string]}")
-        last_response.should be_ok
-        last_response.should match Regexp.new(number[:error])
+        expect { 
+          get URI.encode("/#{number[:string]}") 
+        }.to raise_error(ConverterException)
       end
 
     end
   end
-
 end
 

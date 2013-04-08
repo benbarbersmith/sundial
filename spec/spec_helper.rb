@@ -49,14 +49,22 @@ def valid_numbers
 end
 
 def invalid_numbers
+  invalid_area_codes = [
+    "2995671234", "+1 2995671234", "+001 2995671234", "+1 501234567", 
+  ]
+  invalid_numbers = [
+    "1", "12324", "+11 1234567123", "+2 2074567123", 
+    "501234567", "+001 50123456"
+  ]
   numbers = []
-  ["2995671234", "+1 2995671234", "+001 2995671234", "+1 501234567", ].each do |n|
+
+  invalid_area_codes.each do |n|
     number = {}
     number[:string] = n
     number[:error] = "has an unknown area code"
     numbers << number
   end
-  ["1", "12324", "+11 1234567123", "+2 2074567123", "501234567", "+001 50123456"].each do |n|
+  invalid_numbers.each do |n|
     number = {}
     number[:string] = n
     number[:error] = "is not a recognised US telephone number."
