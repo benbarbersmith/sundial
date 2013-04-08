@@ -97,9 +97,9 @@ class Converter
         "#{time} #{zone} (GMT #{'+' if offset > 0}#{offset})"
       end
     rescue InvalidNumberException
-      "#{number} is not a recognised US telephone number."  
+      raise ConverterException, "#{number} is not a recognised US telephone number."  
     rescue UnknownAreaCodeException
-      "#{number} has an unknown area code."
+      raise ConverterException, "#{number} has an unknown area code."
     end
   end
 
@@ -109,4 +109,7 @@ class InvalidNumberException < Exception
 end
 
 class UnknownAreaCodeException < Exception
+end
+
+class ConverterException < Exception
 end
