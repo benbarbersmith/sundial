@@ -5,15 +5,27 @@ require 'tzinfo'
 
 class Converter
 
-  DefaultNumber = "01865 203192"
-  NumberLengthWithLongCountryCode = 13
-  NumberLengthWithShortCountryCode = 11 
-  NumberLengthWithoutCountryCode = 10
   USShortCountryCode = "1"
   USLongCountryCode = "001"
-  USShorterAreaCodes = ["52", "55"]
-  AreaCodeLength = 3
-  
+
+  USShortAreaCodeLength = 2
+  USLongAreaCodeLength = 3
+
+  LocalNumberLength = 7
+
+  PrefixLengths = [
+    USShortAreaCodeLength,
+    USLongAreaCodeLength, 
+    USShortAreaCodeLength + USShortCountryCode.size,
+    USLongAreaCodeLength + USShortCountryCode.size, 
+    USShortAreaCodeLength + USLongCountryCode.size,
+    USLongAreaCodeLength + USLongCountryCode.size, 
+  ]
+
+  ValidNumberLengths = PrefixLengths.uniq.map do |prefix_length|
+    LocalNumberLength + prefix_length
+  end
+
   def initialize 
     @timezones = parse_timezone_csv("/../data/areacodes.csv")
     @shortnames = parse_shortname_csv("/../data/shortnames.csv")
@@ -39,42 +51,40 @@ class Converter
     hash
   end
 
+  def valid_with_code?(number, code="")
+    # Check that the number starts with the code under test, and return
+    # false if not.
+    number.start_with? code or return false
+    # Get the expected area code length for a number beginning with the
+    # code under test.
+    area_code_length = number.size - code.size - LocalNumberLength
+    # Check if the calculated area code length is valid.
+    valid_length = (area_code_length == USShortAreaCodeLength or \
+                    area_code_length == USLongAreaCodeLength)
+  end
+
+  def extract_with_code(number, code="")
+    # Get the expected area code length.
+    area_code_length = number.size - code.size - LocalNumberLength
+    # Extract the relevant substring corresponding to the area code.
+    number[code.size..area_code_length+code.size-1]
+  end
+
   def extract_area_code(number)
+    # Strip the number down to the digits.
     number = number.gsub(/[^\d]+/, '')
-    case number.size
-
-    when NumberLengthWithShortCountryCode
-      number.start_with? USShortCountryCode or raise InvalidNumberException
-      number.sub(USShortCountryCode, '')[0..AreaCodeLength-1]
-
-    when NumberLengthWithLongCountryCode
-      number.start_with? USLongCountryCode or raise InvalidNumberException
-      number.sub(USLongCountryCode, '')[0..AreaCodeLength-1]
-
-    when NumberLengthWithoutCountryCode
-      if number.start_with? "152" or number.start_with? "155"
-        number[1..AreaCodeLength-1]
-      else
-        number[0..AreaCodeLength-1]
-      end
-
-    when NumberLengthWithLongCountryCode-1
-      if USShorterAreaCodes.any? { |code| number.start_with? (USLongCountryCode + code) }
-        number.sub(USLongCountryCode, '')[0..AreaCodeLength-2]
-      else
-        raise InvalidNumberException
-      end 
-
-    when NumberLengthWithoutCountryCode-1
-      if USShorterAreaCodes.any? { |code| number.start_with? code }
-        number[0..AreaCodeLength-2]
-      else
-        raise InvalidNumberException
-      end
-
+    # Unless the number is one of the expected lengths, it's invalid.
+    raise InvalidNumberException unless ValidNumberLengths.include? number.size
+    # Step through the possible valid scenarios.
+    case 
+    when valid_with_code?(number, USLongCountryCode)
+      extract_with_code(number, USLongCountryCode)
+    when valid_with_code?(number, USShortCountryCode)
+      extract_with_code(number, USShortCountryCode)
+    when valid_with_code?(number)
+      extract_with_code(number)
     else
       raise InvalidNumberException
-
     end
   end
 
@@ -83,23 +93,35 @@ class Converter
   def convert(number = DefaultNumber)
     begin
       area_code = extract_area_code(number)
+
+      # Check that the area code is in our hash.
       @timezones.has_key? area_code or raise UnknownAreaCodeException
+
+      # For each relevant timezone, prepare a string showing the current
+      # time in that zone.
       @timezones[area_code].map do |tz|
+        # Get the time in 24 hour clock format (HH:MM)/
         time = tz.now.strftime("%H:%M")
+        # Get the offset in hours.
         offset = tz.current_period.utc_total_offset / 3600
+        # Get a shortname for the zone from our hash.
         zone = tz.friendly_identifier.gsub(" - ","/").gsub(" ", "_")
         zone = @shortnames[zone]
+        # Adjust for DST, where appropriate.
         if tz.current_period.dst?
           zone = zone.last
         else
           zone = zone.first
         end
+        # Return a readable output string.
         "#{time} #{zone} (GMT #{'+' if offset > 0}#{offset})"
       end
     rescue InvalidNumberException
-      raise ConverterException, "#{number} is not a recognised US telephone number."  
+      raise ConverterException, 
+        "#{number} is not a recognised US telephone number."  
     rescue UnknownAreaCodeException
-      raise ConverterException, "#{number} has an unknown area code."
+      raise ConverterException, 
+        "#{number} has an unknown area code."
     end
   end
 
