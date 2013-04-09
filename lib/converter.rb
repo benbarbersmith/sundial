@@ -93,17 +93,18 @@ class Converter
   def convert(number = DefaultNumber)
     begin
       area_code = extract_area_code(number)
-
       # Check that the area code is in our hash.
       @timezones.has_key? area_code or raise UnknownAreaCodeException
 
       # For each relevant timezone, prepare a string showing the current
       # time in that zone.
-      @timezones[area_code].map do |tz|
+      results = []
+      @timezones[area_code].each do |tz|
+        result = {}
         # Get the time in 24 hour clock format (HH:MM)/
-        time = tz.now.strftime("%H:%M")
+        result[:time] = tz.now.strftime("%H:%M")
         # Get the offset in hours.
-        offset = tz.current_period.utc_total_offset / 3600
+        result[:offset] = tz.current_period.utc_total_offset / 3600
         # Get a shortname for the zone from our hash.
         zone = tz.friendly_identifier.gsub(" - ","/").gsub(" ", "_")
         zone = @shortnames[zone]
@@ -113,9 +114,10 @@ class Converter
         else
           zone = zone.first
         end
-        # Return a readable output string.
-        "#{time} #{zone} (GMT #{'+' if offset > 0}#{offset})"
+        result[:timezone] = zone
+        results << result
       end
+      results
     rescue InvalidNumberException
       raise ConverterException, 
         "#{number} is not a recognised US telephone number."  

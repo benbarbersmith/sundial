@@ -13,7 +13,11 @@ get '/' do
 end
 
 get '/:input' do |input|
-  converter.convert(input).join(" or ")
+  results = converter.convert(input)
+  # Return a readable output string.
+  results.map do |r|
+    "#{r[:time]} #{r[:timezone]} (GMT #{'+' if r[:offset] > 0}#{r[:offset]})"
+  end.join(" or ")
 end
 
 error do
