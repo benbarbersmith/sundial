@@ -2,6 +2,7 @@
 
 require 'csv'
 require 'tzinfo'
+require 'phonie'
 
 class Converter
 
@@ -27,8 +28,40 @@ class Converter
   end
 
   def initialize 
-    @timezones = parse_timezone_csv("/../data/areacodes.csv")
-    @shortnames = parse_shortname_csv("/../data/shortnames.csv")
+    @us_timezones = parse_timezone_csv("/../data/area_codes.csv")
+    @short_names = parse_shortname_csv("/../data/short_names.csv")
+    @international_timezones = load_country_codes
+    Phonie::Phone.default_country_code = '1'
+  end
+
+  def convert(number)
+    begin
+      country_code = extract_country_code(number)
+      raise InvalidIntlNumberException unless \
+        @international_timezones.has_key? country_code
+      tz_list = timezones_from_number(country_code, number)
+
+      # For each relevant timezone, prepare a string showing the current
+      # time in that zone.
+      results = []
+      tz_list.each do |tz|
+        result = {}
+        result[:time] = tz.now.strftime("%H:%M")
+        result[:offset] = timezone_offset(tz)
+        result[:timezone] = timezone_name(country_code, tz)
+        results << result
+      end
+      results
+    rescue InvalidUSNumberException
+      raise ConverterException, 
+        "#{number} is not a recognised US telephone number."  
+    rescue InvalidIntlNumberException
+      raise ConverterException, 
+        "#{number} is not a recognised telephone number."  
+    rescue UnknownAreaCodeException
+      raise ConverterException, 
+        "#{number} has an unknown area code."
+    end
   end
 
   private
@@ -49,6 +82,15 @@ class Converter
       hash[line.first] = line[1..-1]
     end
     hash
+  end
+
+  def load_country_codes
+    countries = Phonie::Country.load
+    timezones = {}
+    countries.each do |c|
+      timezones[c.country_code] = TZInfo::Country.get(c.char_3_code).zones
+    end
+    timezones
   end
 
   def valid_with_code?(number, code="")
@@ -74,7 +116,7 @@ class Converter
     # Strip the number down to the digits.
     number = number.gsub(/[^\d]+/, '')
     # Unless the number is one of the expected lengths, it's invalid.
-    raise InvalidNumberException unless ValidNumberLengths.include? number.size
+    raise InvalidIntlNumberException unless ValidNumberLengths.include? number.size
     # Step through the possible valid scenarios.
     case 
     when valid_with_code?(number, USLongCountryCode)
@@ -84,52 +126,70 @@ class Converter
     when valid_with_code?(number)
       extract_with_code(number)
     else
-      raise InvalidNumberException
+      raise InvalidUSNumberException
     end
   end
 
-  public
+  def extract_country_code(number)
+    # Parse number using Phonie to find the country code if possible.
+    pn = Phonie::Phone.parse(number.sub("+", "")) 
+    if not pn.nil?
+      pn.format("%c") 
+    else
+      "1"
+    end
+  end
 
-  def convert(number = DefaultNumber)
-    begin
+  def timezones_from_number(country_code, number)
+    if country_code == "1" 
+      # Within the US, we have a good understanding of how area codes map
+      # to timezones, so we need to get the area code.
       area_code = extract_area_code(number)
-      # Check that the area code is in our hash.
-      @timezones.has_key? area_code or raise UnknownAreaCodeException
+      # First we check that the area code is in our data...
+      @us_timezones.has_key? area_code or raise UnknownAreaCodeException
+      # ...then we return a list of relevant timezones for that area code.
+      @us_timezones[area_code]
+    else
+      # Outside the US, we have less complete knowledge of area codes and
+      # their correspondence to timezones, so just return a list of
+      # relevant timezones for that country.
+      @international_timezones[country_code] 
+    end
+  end
 
-      # For each relevant timezone, prepare a string showing the current
-      # time in that zone.
-      results = []
-      @timezones[area_code].each do |tz|
-        result = {}
-        # Get the time in 24 hour clock format (HH:MM)/
-        result[:time] = tz.now.strftime("%H:%M")
-        # Get the offset in hours.
-        result[:offset] = tz.current_period.utc_total_offset / 3600
-        # Get a shortname for the zone from our hash.
-        zone = tz.friendly_identifier.gsub(" - ","/").gsub(" ", "_")
-        zone = @shortnames[zone]
-        # Adjust for DST, where appropriate.
-        if tz.current_period.dst?
-          zone = zone.last
-        else
-          zone = zone.first
-        end
-        result[:timezone] = zone
-        results << result
+  def timezone_name(country_code, timezone)
+    # Can we use a short name for the timezone? Depends on whether the
+    # timezone is in the US.
+    if country_code == "1"
+      # For US numbers, get a friendly short name for the zone.
+      long_name = timezone.friendly_identifier.gsub(" - ","/").gsub(" ", "_")
+      # Adjust for DST, where appropriate.
+      if timezone.current_period.dst?
+        @short_names[long_name].first
+      else
+        @short_names[long_name].last
       end
-      results
-    rescue InvalidNumberException
-      raise ConverterException, 
-        "#{number} is not a recognised US telephone number."  
-    rescue UnknownAreaCodeException
-      raise ConverterException, 
-        "#{number} has an unknown area code."
+    else
+      # For internatinoal numbers, use the actual timezone name.
+      timezone.name
+    end
+  end
+
+  def timezone_offset(timezone)
+    # Get the offset in hours (with a leading zero).
+    if timezone.current_period.utc_total_offset >= 0
+      "+%02d" % (timezone.current_period.utc_total_offset / 3600)
+    else
+      "%03d" % (timezone.current_period.utc_total_offset / 3600)
     end
   end
 
 end
 
-class InvalidNumberException < Exception
+class InvalidIntlNumberException < Exception
+end
+
+class InvalidUSNumberException < Exception
 end
 
 class UnknownAreaCodeException < Exception

@@ -17,7 +17,7 @@ get '/' do
     }
   else
     # If a number has been provided, redirect to a friendly URL.
-    redirect URI::encode("/" + params[:convert])
+    redirect URI::encode("/" + params[:convert]).gsub(/(\[|\])/,'') 
   end
 end
 
@@ -26,12 +26,21 @@ get '/:input' do |input|
   results = converter.convert(input)
   # Build a readable output string.
   time = results.map do |r|
-    "#{r[:time]} #{r[:timezone]} (UTC #{'+' if r[:offset] > 0}#{r[:offset]})"
-  end.join(" or ")
+    r[:time] + " UTC" + r[:offset]
+  end.uniq
+  timezone = results.map do |r|
+    r[:timezone]
+  end
+  # If there are many results, just simplify things.
+  if time.size > 2 or timezone.size > 2
+    time = ["Sometime between #{time.first} and #{time.last}"]
+    timezone = ["Somewhere between #{timezone.first} and #{timezone.last}"]
+  end
   # Render template to present outputs neatly.
   erb :result, :locals => {
     :input => input, 
-    :time => time,
+    :time => time.join(" or "),
+    :timezone => timezone.join(" or "),
   }
 end
 
