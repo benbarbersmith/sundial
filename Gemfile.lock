@@ -2,6 +2,7 @@ GEM
   remote: http://rubygems.org/
   specs:
     diff-lcs (1.2.2)
+    phonie (1.0.3)
     rack (1.5.2)
     rack-protection (1.5.0)
       rack
@@ -24,6 +25,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  phonie
   rspec
   sinatra
   tzinfo
