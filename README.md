@@ -1,9 +1,14 @@
 Sundial
 =======
 
-Sundial is a telephone-number to timezone conversion tool. Give it a US
-telephone number (in any old format) and it'll tell you the timezone to
-which the number corresponds. 
+Sundial is a telephone number to timezone conversion tool. Give it
+a telephone number (in any format) and it'll tell you the local time and
+timezone.
+
+Sundial works particularly well with US telephone numbers, and in the US it
+can look up timezones by area code. Unless your telephone number has an
+international country code prefix like `+44`, `0044`, `+385` or `00385`, Sundial
+will assume that you are converting a US telephone number.
 
 Installation
 ------------
