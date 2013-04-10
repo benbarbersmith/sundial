@@ -16,7 +16,6 @@ body {
 /* Main results message and sign up button */
 .jumbotron {
   margin: 30px 0;
-  text-align: center;
 }
 .jumbotron h1 {
   font-size: 72px;
@@ -32,7 +31,7 @@ body {
   padding: 14px 24px;
 }
 .lead {
-  font-size: 18px;
+  font-size: 21px;
   margin: 1.5em 0em 1.5em 0em;
 }
 
@@ -40,13 +39,10 @@ body {
 .results {
   margin: 30px 0;
 }
-.results p + h4 {
+.results dl {
   margin-top: 14px;
+  margin-bottom: 0em;
 }
-.results p, .results h4 {
-  text-align: center;
-}
-
-.footer p {
-  text-align: center;
+.results dd {
+  margin-bottom: 0.5em;
 }
