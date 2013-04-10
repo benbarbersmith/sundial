@@ -1,14 +1,14 @@
 require_relative 'spec_helper'
 
-describe "Sundial" do
+describe "For US numbers" do
   valid_numbers.each do |number|
     context "if you give a valid number #{number[:string]}" do
 
       it "will give the timezone(s) #{number[:timezone].join(",")}" do
         get URI.encode("/#{number[:string]}")
         last_response.should be_ok
-        number[:timezone].each do |tz|
-          last_response.should match Regexp.new(tz)
+        number[:timezone].any? do |tz|
+          last_response.body =~ Regexp.new(Regexp.escape(tz))
         end
       end
 
@@ -28,3 +28,18 @@ describe "Sundial" do
   end
 end
 
+describe "For international numbers" do
+  intl_valid_numbers.each do |number|
+    context "if you give a valid number #{number[:string]}" do
+
+      it "will give the timezone(s) #{number[:timezone].join(" or ")}" do
+        get URI.encode("/#{number[:string].gsub(/(\[|\])/,"")}")
+        last_response.should be_ok
+        number[:timezone].any? do |tz|
+          last_response.body =~ Regexp.new(Regexp.escape(tz))
+        end
+      end
+
+    end 
+  end
+end

@@ -22,18 +22,18 @@ end
 
 def valid_numbers
   numbers = []
-  CSV.foreach(File.dirname(__FILE__) + '/../data/areacodes.csv') do |line|
+  CSV.foreach(File.dirname(__FILE__) + '/../data/area_codes.csv') do |line|
     number = {}
     number[:string] = "(#{line.first}) 123 4567"
     number[:timezone] = line.last.split("+")
     numbers << number
   end
   shortnames = {}
-  CSV.foreach(File.dirname(__FILE__) + '/../data/shortnames.csv') do |line|
-    shortnames[line.first] = line.last
+  CSV.foreach(File.dirname(__FILE__) + '/../data/short_names.csv') do |line|
+    shortnames[line.first] = line[1..-1]
   end
   numbers.each do |number|
-    number[:timezone] = number[:timezone].map { |t| shortnames[t] }
+    number[:timezone] = number[:timezone].map { |t| shortnames[t] }.flatten.uniq
   end
   out = []
   numbers.each do |number|
@@ -71,4 +71,17 @@ def invalid_numbers
     numbers << number
   end
   numbers
+end
+
+def intl_valid_numbers
+  numbers = [
+    { :string => "+385 (915) 125 486",
+      :timezone => ["+01", "+02"] },
+    { :string => "+49 (0)228 29970299",
+      :timezone => ["+01", "+02"] },
+    { :string => "[7] (343) 253-1433",
+      :timezone => ["+03", "+04", "+06", "+07", "+08", "+09", "+10", "+11", "+12" ]},
+    { :string => "+44 (0)1481 723552",
+      :timezone => ["+00", "+01"] },
+  ]
 end
