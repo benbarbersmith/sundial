@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Sundial - US Telephone Number to Timezone Conversion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sundial is a telephone-number to timezone conversion tool. Give it a US telephone number (in any old format) and it'll tell you the timezone to which the number corresponds.">
+    <meta name="author" content="Benjamin Smith">
+
+    <link href="http://fonts.googleapis.com/css?family=Bitter:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+        font-family: "Open Sans";
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 700px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main results message and sign up button */
+      .jumbotron {
+        margin: 30px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+        font-family: "Bitter" 
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+      .lead {
+        font-size: 18px;
+        margin: 1.5em 0em 1.5em 0em;
+      }
+
+      /* Supporting results content */
+      .results {
+        margin: 30px 0;
+      }
+      .results p + h4 {
+        margin-top: 14px;
+      }
+      .results p, .results h4 {
+        text-align: center;
+      }
+    </style>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="ico/favicon.png">
+  </head>
+
+  <body>
+
+    <div class="container-narrow">
+
+      <div class="jumbotron">
+        <h1>Sundial</h1>
+      </div>
+
+      <%= yield %>
+
+      <hr>
+
+      <div class="jumbotron">
+        <p class="lead">Sundial is a telephone-number to timezone conversion tool. Give it a US telephone number (in any old format) and it'll tell you the local time and timezone to which the number corresponds.</p>
+        <form class="convert" action="/" method="get"> 
+          <div class="control-group">
+            <input type="text" name="convert" value="<%= input or "" %>" class="input-large form-search">
+          </div>
+          <button type="submit" class="btn btn-large btn-success">What's the time?</button>
+        </form>
+      </div>
+
+      <hr>
+
+      <div class="footer">
+        <p>&copy; <a href="http://www.benjaminasmith.com/">Benjamin Smith</a></p>
+      </div>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
