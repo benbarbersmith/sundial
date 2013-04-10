@@ -26,7 +26,7 @@ get '/:input' do |input|
   results = converter.convert(input)
   # Build a readable output string.
   time = results.map do |r|
-    "#{r[:time]} #{r[:timezone]} (GMT #{'+' if r[:offset] > 0}#{r[:offset]})"
+    "#{r[:time]} #{r[:timezone]} (UTC #{'+' if r[:offset] > 0}#{r[:offset]})"
   end.join(" or ")
   # Render template to present outputs neatly.
   erb :result, :locals => {
