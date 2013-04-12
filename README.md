@@ -27,7 +27,7 @@ If you'd rather use a hosted copy, check out `http://sundial.benjaminasmith.com/
 Usage
 -----
 
-Browse to the application root, then enter a US telephone number that you
+Browse to the application root, then enter a telephone number that you
 would like to lookup. Format is not important.
 
 There are other ways to use Sundial besides visiting that page and typing
