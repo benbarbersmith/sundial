@@ -13,12 +13,11 @@ will assume that you are converting a US telephone number.
 Installation
 ------------
 
-Install dependencies using bundler:
+Clone this repo, then install dependencies using bundler:
 
     $ bundle install 
 
-That's the only dependency you need; after that, just grab a copy of the souce
-and run the application.
+That's the only setup you need to do; after that, just run the application.
 
     $ rackup 
 
