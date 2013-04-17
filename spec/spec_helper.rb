@@ -20,6 +20,10 @@ RSpec.configure do |config|
   config.include Rack::Test::Methods
 end
 
+def urlize(input)
+  "/#{sanitize(input)}"
+end
+
 def valid_numbers
   numbers = []
   CSV.foreach(File.dirname(__FILE__) + '/../data/area_codes.csv') do |line|
@@ -70,6 +74,14 @@ def invalid_numbers
     number[:error] = "is not a recognised US telephone number."
     numbers << number
   end
+  numbers << { 
+    :string => "123/456-7890", 
+    :error => "has an unknown area code"
+  }
+  numbers << { 
+    :string => "http://www.google.com/",
+    :error => "is not a recognised telephone number"
+  }
   numbers
 end
 
@@ -83,5 +95,13 @@ def intl_valid_numbers
       :timezone => ["+03", "+04", "+06", "+07", "+08", "+09", "+10", "+11", "+12" ]},
     { :string => "+44 (0)1481 723552",
       :timezone => ["+00", "+01"] },
+  ]
+end
+
+def past_failures
+  numbers = [
+    { :string => "/ [ 209 .* > 123 < 345/>1" },
+    { :string => "209/456-7890" },
+    { :string => "Mobile /: (208] 342.2323" },
   ]
 end
