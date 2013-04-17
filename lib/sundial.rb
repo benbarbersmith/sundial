@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'sinatra'
+require 'cgi'
 require_relative 'converter'
 
 disable :show_exceptions
@@ -17,7 +18,8 @@ get '/' do
     }
   else
     # If a number has been provided, redirect to a friendly URL.
-    redirect URI::encode("/" + params[:convert]).gsub(/(\[|\])/,'') 
+    puts sanitize(params[:convert])
+    redirect("/" + sanitize(params[:convert]))
   end
 end
 
@@ -50,4 +52,8 @@ error do
     :input => nil,
     :error => 'An error occured: ' + request.env['sinatra.error'].message,
   }
+end
+
+def sanitize(input)
+  input.split(" ").map { |i| CGI.escape(i) }.join("%20")
 end
